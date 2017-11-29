@@ -16,7 +16,9 @@ RUN set -ex; \
       nodejs \
       rsync \
       sudo \
+      unzip \
       vim \
+      zip \
     ; \
     rm -rf /var/lib/apt/lists/*; \
     docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr; \
@@ -26,6 +28,7 @@ RUN set -ex; \
     curl -o /usr/local/bin/wp-cli.phar \
       https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar; \
     chmod +x /usr/local/bin/docker-entrypoint.sh; \
+    chmod +x /usr/local/bin/wp-cli.phar; \
     chmod +x /usr/local/bin/wp; \
     mkdir -p /var/www/site/wp
 
@@ -41,7 +44,8 @@ RUN { \
       echo 'opcache.enable_cli=1'; \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
-RUN a2enmod rewrite expires
+RUN a2enmod rewrite expires; \
+    service apache2 restart
 
 RUN set -ex; \
     curl -o wordpress.tar.gz -fSL "https://wordpress.org/latest.tar.gz"; \

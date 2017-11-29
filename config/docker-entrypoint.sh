@@ -25,27 +25,37 @@ file_env() {
 
 if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
   if ! [ -e index.php -a -e ./wp/wp-includes/version.php ]; then
-    echo >&2 "WordPress not found in $PWD - copying now..."
-    if [ "$(ls -A)" ]; then
-      echo >&2 "WARNING: $PWD is not empty - press Ctrl+C now if this is an error!"
-      ( set -x; ls -A; sleep 10 )
+    if ! [ -d ./wp ]; then
+      echo >&2 "No WordPress directory found, creating it now..."
+      mkdir ./wp
     fi
-    tar cf - --one-file-system -C /usr/src/wordpress ./wp/ | tar xf -
+    echo >&2 "WordPress not found in $PWD - copying now..."
+    # TODO: re-implement this check. In the current configuration, we don't
+    # expect the current directory to ever be empty, so this warning is not
+    # needed, given the current setup.
+    #
+    # if [ "$(ls -A)" ]; then
+    #   echo >&2 "WARNING: $PWD is not empty - press Ctrl+C now if this is an error!"
+    #   ( set -x; ls -A; sleep 10 )
+    # fi
+    echo >&2 "PWD: $PWD"
+    echo >&2 "$(ls -A)"
+    tar cf - --one-file-system -C /usr/src/wordpress . | tar xf - -C ./wp
     echo >&2 "Complete! WordPress has been successfully copied to $PWD"
     if [ ! -e .htaccess ]; then
       # NOTE: The "Indexes" option is disabled in the php:apache base image
       cat > .htaccess <<-'EOF'
-        # BEGIN WordPress
-        <IfModule mod_rewrite.c>
-        RewriteEngine On
-        RewriteBase /
-        RewriteRule ^index\.php$ - [L]
-        RewriteCond %{REQUEST_FILENAME} !-f
-        RewriteCond %{REQUEST_FILENAME} !-d
-        RewriteRule . /index.php [L]
-        </IfModule>
-        # END WordPress
-      EOF
+				# BEGIN WordPress
+				<IfModule mod_rewrite.c>
+				RewriteEngine On
+				RewriteBase /
+				RewriteRule ^index\.php$ - [L]
+				RewriteCond %{REQUEST_FILENAME} !-f
+				RewriteCond %{REQUEST_FILENAME} !-d
+				RewriteRule . /index.php [L]
+				</IfModule>
+				# END WordPress
+			EOF
       chown www-data:www-data .htaccess
     fi
   fi

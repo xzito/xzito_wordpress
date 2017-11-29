@@ -1,25 +1,24 @@
 <?php
-/* Find and replace the string '#$#$' with the site name.  */
 
 /* dotenv configuration */
 require_once(__DIR__ . '/vendor/autoload.php');
 (new \Dotenv\Dotenv(__DIR__))->load();
 
 /* Database configuration */
-define('DB_NAME',     'wp_#$#$');
-define('DB_USER',     'root');
-define('DB_PASSWORD', 'root');
-define('DB_HOST',     'db:3306');
-define('DB_CHARSET',  'utf8');
-define('DB_COLLATE',  '');
+define('DB_NAME',     getenv('DB_NAME'));
+define('DB_USER',     getenv('DB_USER'));
+define('DB_PASSWORD', getenv('DB_PASSWORD'));
+define('DB_HOST',     getenv('DB_HOST'));
+define('DB_CHARSET',  getenv('DB_CHARSET'));
+define('DB_COLLATE',  getenv('DB_COLLATE'));
 
 $table_prefix = 'wp_';
 
 /** Amazon S3 configuration **/
-define('S3_UPLOADS_BUCKET', '#$#$-xzito');
+define('S3_UPLOADS_BUCKET', getenv('S3_UPLOADS_BUCKET'));
 define('S3_UPLOADS_KEY',    getenv('S3_UPLOADS_KEY'));
 define('S3_UPLOADS_SECRET', getenv('S3_UPLOADS_SECRET'));
-define('S3_UPLOADS_REGION', 'us-east-1');
+define('S3_UPLOADS_REGION', getenv('S3_UPLOADS_REGION'));
 
 /**
  * Secrets and salts
@@ -35,8 +34,8 @@ define('LOGGED_IN_SALT',   '0d5skanGt~1,7HM4Ye*-8>b>zRCAC]Oc9rM5LZa-,;iK`J9,9AJY
 define('NONCE_SALT',       'o0>}:Nf^c(,0v(1IlQJ&p3SQ?GKK~Y;TwUDIF]MH%snq}!CIhmHNF~>s[wjE4^aj');
 
 /* Debugging */
-define('WP_DEBUG', true);
-define('WP_DEBUG_LOG', true);
+define('WP_DEBUG',         true);
+define('WP_DEBUG_LOG',     true);
 define('WP_DEBUG_DISPLAY', false);
 
 /* Reverse proxy detection */
@@ -44,20 +43,35 @@ $header     = $_SERVER['HTTP_X_FORWARDED_PROTO'];
 $header_set = (isset($header) ? true : false);
 $is_https   = ($header === 'https' ? true : false);
 
+
 if ($header_set && $is_https) {
   $_SERVER['HTTPS'] = 'on';
 }
-
-/* Path constants */
-define('WP_HOME', 'https://' . $_SERVER['HTTP_HOST']);
-define('WP_SITEURL', 'https://' . $_SERVER['HTTP_HOST'] . '/wp');
-define('CONTENT_DIR', '/content');
-define('WP_CONTENT_DIR', dirname(__FILE__) . CONTENT_DIR);
-define('WP_CONTENT_URL', WP_HOME . CONTENT_DIR);
 
 /* Absolute path to the WordPress directory */
 if (!defined('ABSPATH')) {
   define('ABSPATH', dirname(__FILE__) . '/wp/');
 }
+
+/* Path definitions */
+define('WP_HOME',        'https://' . $_SERVER['HTTP_HOST']);
+define('WP_SITEURL',     'https://' . $_SERVER['HTTP_HOST'] . '/wp');
+define('CONTENT_DIR',    '/content');
+define('PLUGIN_DIR',     '/content/plugins');
+
+$content_dir = dirname(__FILE__) . CONTENT_DIR;
+$content_url = WP_HOME . CONTENT_DIR;
+$plugin_dir  = dirname(__FILE__) . PLUGIN_DIR;
+$plugin_url  = WP_HOME . PLUGIN_DIR;
+
+define('WP_CONTENT_DIR', $content_dir);
+define('WP_CONTENT_URL', $content_url);
+define('WP_PLUGIN_DIR',  $plugin_dir);
+define('WP_PLUGIN_URL',  $plugin_url);
+
+/* Unlike the other path definitions above, the path to the uploads directory is
+ * always relative, so it must be defined after ABSPATH is set. */
+$uploads_dir =    'content/uploads';
+define('UPLOADS', $uploads_dir);
 
 require_once(ABSPATH . 'wp-settings.php');
